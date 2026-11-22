@@ -1,133 +1,192 @@
-import React from 'react';
-import { Calendar, Edit3, Trash2, CheckCircle2, Clock, Circle, AlertCircle } from 'lucide-react';
-import { STATUS_OPTIONS } from '../data/sampleTasks';
+import React, { useState, useRef, useEffect } from 'react';
+import { Calendar, MoreHorizontal, Check, Edit3, Trash2, Clock, Circle } from 'lucide-react';
 
 /**
- * TaskCard component for desktop, tablet, and mobile views
+ * TaskRow component matching Figma row design
  */
 export function TaskCard({ task, onEdit, onDelete, onStatusChange }) {
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef(null);
+
   const isCompleted = task.status === 'Completed';
 
-  // Format Due Date
-  const formatDate = (dateString) => {
-    if (!dateString) return 'No deadline';
+  // Format Due date like "Nov 22"
+  const formatShortDate = (dateStr) => {
+    if (!dateStr) return 'No due date';
     try {
-      const date = new Date(dateString + 'T00:00:00');
-      return date.toLocaleDateString('en-US', {
-        month: 'short',
-        day: 'numeric',
-        year: 'numeric'
-      });
+      const parts = dateStr.split('-');
+      if (parts.length === 3) {
+        const d = new Date(parts[0], parts[1] - 1, parts[2]);
+        return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      }
+      return dateStr;
     } catch {
-      return dateString;
+      return dateStr;
     }
   };
 
-  // Check if overdue
-  const isOverdue = () => {
-    if (isCompleted || !task.dueDate) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const due = new Date(task.dueDate + 'T00:00:00');
-    return due < today;
+  // Toggle completion via checkbox
+  const handleToggleCheck = () => {
+    if (isCompleted) {
+      onStatusChange(task.id, 'In progress');
+    } else {
+      onStatusChange(task.id, 'Completed');
+    }
   };
 
-  // Status icon helper
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'Completed':
-        return <CheckCircle2 size={15} className="status-badge__icon text-emerald" aria-hidden="true" />;
-      case 'In progress':
-        return <Clock size={15} className="status-badge__icon text-amber" aria-hidden="true" />;
-      case 'To do':
-      default:
-        return <Circle size={15} className="status-badge__icon text-blue" aria-hidden="true" />;
+  // Close dropdown menu when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (menuRef.current && !menuRef.current.contains(e.target)) {
+        setIsMenuOpen(false);
+      }
+    };
+    if (isMenuOpen) {
+      document.addEventListener('mousedown', handleOutsideClick);
     }
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [isMenuOpen]);
+
+  // Priority CSS classes
+  const getPriorityClass = (priority) => {
+    const p = (priority || 'medium').toLowerCase();
+    if (p === 'high') return 'priority-badge--high';
+    if (p === 'low') return 'priority-badge--low';
+    return 'priority-badge--medium';
+  };
+
+  // Category CSS classes
+  const getCategoryClass = (category) => {
+    const c = (category || 'general').toLowerCase();
+    return `category-badge--${c}`;
   };
 
   return (
-    <article
-      className={`task-card ${isCompleted ? 'task-card--completed' : ''}`}
+    <div
+      className={`task-row ${isCompleted ? 'task-row--completed' : ''}`}
+      role="article"
       aria-label={`Task: ${task.title}`}
     >
-      {/* Top row: Category tag & Priority badge */}
-      <div className="task-card__top">
-        <div className="task-card__tags">
-          <span className={`task-badge task-badge--category category--${task.category?.toLowerCase() || 'default'}`}>
-            {task.category || 'General'}
-          </span>
-          <span className={`task-badge task-badge--priority priority--${task.priority?.toLowerCase() || 'medium'}`}>
-            {task.priority === 'High' && <AlertCircle size={12} aria-hidden="true" />}
-            {task.priority} Priority
-          </span>
-        </div>
+      {/* Checkbox column */}
+      <button
+        type="button"
+        className={`task-checkbox ${isCompleted ? 'task-checkbox--checked' : ''}`}
+        onClick={handleToggleCheck}
+        aria-label={isCompleted ? `Mark ${task.title} as incomplete` : `Mark ${task.title} as completed`}
+        title={isCompleted ? 'Mark incomplete' : 'Mark completed'}
+      >
+        {isCompleted && <Check size={13} strokeWidth={3} aria-hidden="true" />}
+      </button>
 
-        {/* Quick Actions (Edit, Delete) */}
-        <div className="task-card__actions" role="group" aria-label="Task actions">
-          <button
-            type="button"
-            className="task-action-btn task-action-btn--edit"
-            onClick={() => onEdit(task)}
-            title="Edit task"
-            aria-label={`Edit task "${task.title}"`}
-          >
-            <Edit3 size={15} aria-hidden="true" />
-          </button>
-          <button
-            type="button"
-            className="task-action-btn task-action-btn--delete"
-            onClick={() => onDelete(task)}
-            title="Delete task"
-            aria-label={`Delete task "${task.title}"`}
-          >
-            <Trash2 size={15} aria-hidden="true" />
-          </button>
-        </div>
-      </div>
-
-      {/* Task Content: Title & Description */}
-      <div className="task-card__main">
-        <h4 className={`task-card__title ${isCompleted ? 'task-card__title--done' : ''}`}>
+      {/* Title & subtitle column */}
+      <div className="task-content">
+        <h4 className={`task-title ${isCompleted ? 'task-title--completed' : ''}`}>
           {task.title}
         </h4>
         {task.description && (
-          <p className="task-card__description">
-            {task.description}
-          </p>
+          <p className="task-subtitle">{task.description}</p>
         )}
       </div>
 
-      {/* Task Footer: Due Date and Status Selector */}
-      <div className="task-card__footer">
-        <div className={`task-card__due-date ${isOverdue() ? 'task-card__due-date--overdue' : ''}`}>
-          <Calendar size={14} aria-hidden="true" />
-          <span>{formatDate(task.dueDate)}</span>
-          {isOverdue() && <span className="overdue-tag">Overdue</span>}
+      {/* Meta tags column (Category, Priority, Due date) */}
+      <div className="task-meta">
+        <span className={`category-badge ${getCategoryClass(task.category)}`}>
+          {task.category || 'General'}
+        </span>
+
+        <span className={`priority-badge ${getPriorityClass(task.priority)}`}>
+          {task.priority || 'Medium'}
+        </span>
+
+        <div className="task-duedate">
+          <Calendar size={13} className="task-duedate-icon" aria-hidden="true" />
+          <span>{formatShortDate(task.dueDate)}</span>
         </div>
 
-        {/* Interactive Status Selector */}
-        <div className="task-card__status-wrap">
-          <label htmlFor={`status-select-${task.id}`} className="visually-hidden">
-            Update status for {task.title}
-          </label>
-          <div className={`status-pill status-pill--${task.status?.toLowerCase().replace(/\s+/g, '-')}`}>
-            {getStatusIcon(task.status)}
-            <select
-              id={`status-select-${task.id}`}
-              className="status-pill__select"
-              value={task.status}
-              onChange={(e) => onStatusChange(task.id, e.target.value)}
-              aria-label={`Change status for ${task.title}`}
-            >
-              {STATUS_OPTIONS.map((st) => (
-                <option key={st} value={st}>
-                  {st}
-                </option>
-              ))}
-            </select>
-          </div>
+        {/* 3 dots action menu */}
+        <div className="task-menu-container" ref={menuRef}>
+          <button
+            type="button"
+            className="task-menu-btn"
+            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            aria-label={`More options for ${task.title}`}
+            aria-expanded={isMenuOpen}
+          >
+            <MoreHorizontal size={16} aria-hidden="true" />
+          </button>
+
+          {isMenuOpen && (
+            <div className="task-dropdown-menu" role="menu">
+              <button
+                type="button"
+                className="task-dropdown-item"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onEdit(task);
+                }}
+                role="menuitem"
+              >
+                <Edit3 size={14} aria-hidden="true" />
+                <span>Edit task</span>
+              </button>
+
+              <button
+                type="button"
+                className="task-dropdown-item"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onStatusChange(task.id, 'To do');
+                }}
+                role="menuitem"
+              >
+                <Circle size={14} className="text-blue" aria-hidden="true" />
+                <span>Set To do</span>
+              </button>
+
+              <button
+                type="button"
+                className="task-dropdown-item"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onStatusChange(task.id, 'In progress');
+                }}
+                role="menuitem"
+              >
+                <Clock size={14} className="text-amber" aria-hidden="true" />
+                <span>Set In progress</span>
+              </button>
+
+              <button
+                type="button"
+                className="task-dropdown-item"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onStatusChange(task.id, 'Completed');
+                }}
+                role="menuitem"
+              >
+                <Check size={14} className="text-emerald" aria-hidden="true" />
+                <span>Set Completed</span>
+              </button>
+
+              <div className="dropdown-divider" />
+
+              <button
+                type="button"
+                className="task-dropdown-item task-dropdown-item--danger"
+                onClick={() => {
+                  setIsMenuOpen(false);
+                  onDelete(task);
+                }}
+                role="menuitem"
+              >
+                <Trash2 size={14} aria-hidden="true" />
+                <span>Delete task</span>
+              </button>
+            </div>
+          )}
         </div>
       </div>
-    </article>
+    </div>
   );
 }

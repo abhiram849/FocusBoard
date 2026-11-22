@@ -1,68 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { X, Calendar, Tag, AlertTriangle, Layers, Clock } from 'lucide-react';
-import { CATEGORIES, STATUS_OPTIONS, PRIORITY_OPTIONS } from '../data/sampleTasks';
+import { X, Calendar, ChevronDown, AlertCircle } from 'lucide-react';
+import { STATUS_OPTIONS, PRIORITY_OPTIONS, CATEGORIES } from '../data/sampleTasks';
 
 /**
- * TaskForm modal dialog for both Create and Edit operations
+ * TaskForm Modal matching Figma "New task form - 760 x 822"
  */
 export function TaskForm({ isOpen, onClose, onSubmit, initialTask }) {
   const isEditing = Boolean(initialTask);
   const titleInputRef = useRef(null);
 
-  // Form Fields State
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    category: 'Development',
+    category: 'Design',
     status: 'To do',
     priority: 'Medium',
     dueDate: ''
   });
 
-  // Validation Errors State
-  const [errors, setErrors] = useState({});
-  const [touched, setTouched] = useState({});
+  const [error, setError] = useState('');
 
-  // Reset or populate fields when modal opens or initialTask changes
   useEffect(() => {
     if (isOpen) {
       if (initialTask) {
         setFormData({
           title: initialTask.title || '',
           description: initialTask.description || '',
-          category: initialTask.category || 'Development',
+          category: initialTask.category || 'Design',
           status: initialTask.status || 'To do',
           priority: initialTask.priority || 'Medium',
           dueDate: initialTask.dueDate || ''
         });
       } else {
-        // Default values for new task
         const todayStr = new Date().toISOString().split('T')[0];
         setFormData({
           title: '',
           description: '',
-          category: 'Development',
+          category: 'Design',
           status: 'To do',
           priority: 'Medium',
           dueDate: todayStr
         });
       }
-      setErrors({});
-      setTouched({});
-
-      // Auto-focus title input when dialog opens
-      setTimeout(() => {
-        titleInputRef.current?.focus();
-      }, 50);
+      setError('');
+      setTimeout(() => titleInputRef.current?.focus(), 50);
     }
   }, [isOpen, initialTask]);
 
-  // Handle keyboard ESC key
+  // Esc key closes modal
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onClose();
-      }
+      if (e.key === 'Escape' && isOpen) onClose();
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
@@ -70,254 +58,195 @@ export function TaskForm({ isOpen, onClose, onSubmit, initialTask }) {
 
   if (!isOpen) return null;
 
-  // Validation function
-  const validate = () => {
-    const newErrors = {};
-    const trimmedTitle = formData.title.trim();
-
-    if (!trimmedTitle) {
-      newErrors.title = 'Task title is required and cannot be empty or spaces only.';
-    } else if (trimmedTitle.length < 3) {
-      newErrors.title = 'Task title must be at least 3 characters long.';
-    }
-
-    if (!formData.dueDate) {
-      newErrors.dueDate = 'Due date is required.';
-    }
-
-    if (!formData.status) {
-      newErrors.status = 'Status is required.';
-    }
-
-    if (!formData.priority) {
-      newErrors.priority = 'Priority is required.';
-    }
-
-    return newErrors;
-  };
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prev) => ({ ...prev, [name]: value }));
-
-    // Real-time clearing of error if valid
-    if (errors[name]) {
-      setErrors((prev) => ({ ...prev, [name]: null }));
-    }
-  };
-
-  const handleBlur = (e) => {
-    const { name } = e.target;
-    setTouched((prev) => ({ ...prev, [name]: true }));
-  };
-
   const handleSubmit = (e) => {
     e.preventDefault();
-    const validationErrors = validate();
-
-    if (Object.keys(validationErrors).length > 0) {
-      setErrors(validationErrors);
-      setTouched({
-        title: true,
-        dueDate: true,
-        status: true,
-        priority: true
-      });
+    const trimmedTitle = formData.title.trim();
+    if (!trimmedTitle) {
+      setError('Task title is required.');
       return;
     }
 
-    // Submit clean trimmed data
     onSubmit({
       ...formData,
-      title: formData.title.trim(),
+      title: trimmedTitle,
       description: formData.description.trim()
     });
-
     onClose();
   };
 
   return (
-    <div className="modal-backdrop" onClick={onClose} role="presentation">
+    <div className="figma-modal-backdrop" onClick={onClose} role="presentation">
       <div
-        className="modal-container task-form-modal"
+        className="figma-modal-card"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="task-form-title"
+        aria-labelledby="figma-modal-title"
       >
         {/* Modal Header */}
-        <div className="modal-header">
-          <div className="modal-header__title-wrap">
-            <h3 id="task-form-title" className="modal-header__title">
-              {isEditing ? 'Edit Task' : 'Create New Task'}
+        <div className="figma-modal-header">
+          <div>
+            <h3 id="figma-modal-title" className="figma-modal-title">
+              {isEditing ? 'Edit task' : 'Create new task'}
             </h3>
-            <p className="modal-header__subtitle">
-              {isEditing
-                ? 'Update task details, deadline, and priority.'
-                : 'Fill in the information below to add a task to your board.'}
+            <p className="figma-modal-subtitle">
+              Add your task details to stay on top of your work.
             </p>
           </div>
           <button
             type="button"
-            className="modal-close-btn"
+            className="figma-modal-close"
             onClick={onClose}
             aria-label="Close dialog"
-            title="Close"
           >
-            <X size={20} aria-hidden="true" />
+            <X size={18} aria-hidden="true" />
           </button>
         </div>
 
-        {/* Modal Body / Form */}
-        <form onSubmit={handleSubmit} className="task-form" noValidate>
-          {/* Title Field */}
-          <div className="form-group">
-            <label htmlFor="task-title-input" className="form-label">
-              Task Title <span className="required-star">*</span>
+        {/* Modal Form */}
+        <form onSubmit={handleSubmit} className="figma-modal-form" noValidate>
+          {/* Task Title */}
+          <div className="figma-form-group">
+            <label htmlFor="figma-task-title" className="figma-label">
+              Task title <span className="figma-required">*</span>
             </label>
             <input
               ref={titleInputRef}
-              id="task-title-input"
-              name="title"
+              id="figma-task-title"
               type="text"
-              className={`form-input ${errors.title ? 'form-input--error' : ''}`}
-              placeholder="e.g., Complete interactive dashboard UI"
+              className={`figma-input ${error ? 'figma-input--error' : ''}`}
+              placeholder="e.g. Update pricing page"
               value={formData.title}
-              onChange={handleChange}
-              onBlur={handleBlur}
+              onChange={(e) => {
+                setFormData({ ...formData, title: e.target.value });
+                if (error) setError('');
+              }}
               required
-              aria-invalid={Boolean(errors.title)}
-              aria-describedby={errors.title ? 'task-title-error' : undefined}
             />
-            {errors.title && (
-              <p id="task-title-error" className="form-error" role="alert">
-                <AlertTriangle size={14} aria-hidden="true" />
-                <span>{errors.title}</span>
+            {error && (
+              <p className="figma-error-msg" role="alert">
+                <AlertCircle size={14} aria-hidden="true" />
+                <span>{error}</span>
               </p>
             )}
           </div>
 
-          {/* Description Field */}
-          <div className="form-group">
-            <label htmlFor="task-description-input" className="form-label">
-              Description <span className="optional-text">(Optional)</span>
+          {/* Description */}
+          <div className="figma-form-group">
+            <label htmlFor="figma-task-desc" className="figma-label">
+              Description
             </label>
             <textarea
-              id="task-description-input"
-              name="description"
+              id="figma-task-desc"
               rows={3}
-              className="form-textarea"
-              placeholder="Add key objectives, reference links, or notes..."
+              className="figma-textarea"
+              placeholder="Add notes about this task..."
               value={formData.description}
-              onChange={handleChange}
+              onChange={(e) => setFormData({ ...formData, description: e.target.value })}
             />
           </div>
 
-          {/* Grid Row: Category & Due Date */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="task-category-select" className="form-label">
-                <Tag size={14} className="form-label__icon" aria-hidden="true" />
+          {/* Row: Status & Priority */}
+          <div className="figma-form-row">
+            <div className="figma-form-group">
+              <label htmlFor="figma-task-status" className="figma-label">
+                Status
+              </label>
+              <div className="figma-select-wrap">
+                <select
+                  id="figma-task-status"
+                  className="figma-select"
+                  value={formData.status}
+                  onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                >
+                  {STATUS_OPTIONS.map((st) => (
+                    <option key={st} value={st}>
+                      {st}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="figma-select-chevron" aria-hidden="true" />
+              </div>
+            </div>
+
+            <div className="figma-form-group">
+              <label htmlFor="figma-task-priority" className="figma-label">
+                Priority
+              </label>
+              <div className="figma-select-wrap">
+                <select
+                  id="figma-task-priority"
+                  className="figma-select"
+                  value={formData.priority}
+                  onChange={(e) => setFormData({ ...formData, priority: e.target.value })}
+                >
+                  {PRIORITY_OPTIONS.map((pr) => (
+                    <option key={pr} value={pr}>
+                      {pr}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="figma-select-chevron" aria-hidden="true" />
+              </div>
+            </div>
+          </div>
+
+          {/* Row: Category & Due Date */}
+          <div className="figma-form-row">
+            <div className="figma-form-group">
+              <label htmlFor="figma-task-category" className="figma-label">
                 Category
               </label>
-              <select
-                id="task-category-select"
-                name="category"
-                className="form-select"
-                value={formData.category}
-                onChange={handleChange}
-              >
-                {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
-                  <option key={cat} value={cat}>
-                    {cat}
-                  </option>
-                ))}
-              </select>
+              <div className="figma-select-wrap">
+                <select
+                  id="figma-task-category"
+                  className="figma-select"
+                  value={formData.category}
+                  onChange={(e) => setFormData({ ...formData, category: e.target.value })}
+                >
+                  {CATEGORIES.filter((c) => c !== 'All').map((cat) => (
+                    <option key={cat} value={cat}>
+                      {cat}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown size={14} className="figma-select-chevron" aria-hidden="true" />
+              </div>
             </div>
 
-            <div className="form-group">
-              <label htmlFor="task-duedate-input" className="form-label">
-                <Calendar size={14} className="form-label__icon" aria-hidden="true" />
-                Due Date <span className="required-star">*</span>
+            <div className="figma-form-group">
+              <label htmlFor="figma-task-duedate" className="figma-label">
+                Due date
               </label>
-              <input
-                id="task-duedate-input"
-                name="dueDate"
-                type="date"
-                className={`form-input ${errors.dueDate ? 'form-input--error' : ''}`}
-                value={formData.dueDate}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                required
-                aria-invalid={Boolean(errors.dueDate)}
-                aria-describedby={errors.dueDate ? 'task-duedate-error' : undefined}
-              />
-              {errors.dueDate && (
-                <p id="task-duedate-error" className="form-error" role="alert">
-                  <AlertTriangle size={14} aria-hidden="true" />
-                  <span>{errors.dueDate}</span>
-                </p>
-              )}
+              <div className="figma-date-wrap">
+                <Calendar size={14} className="figma-date-icon" aria-hidden="true" />
+                <input
+                  id="figma-task-duedate"
+                  type="date"
+                  className="figma-input figma-input--date"
+                  value={formData.dueDate}
+                  onChange={(e) => setFormData({ ...formData, dueDate: e.target.value })}
+                />
+              </div>
             </div>
           </div>
 
-          {/* Grid Row: Status & Priority */}
-          <div className="form-row">
-            <div className="form-group">
-              <label htmlFor="task-status-select" className="form-label">
-                <Clock size={14} className="form-label__icon" aria-hidden="true" />
-                Status <span className="required-star">*</span>
-              </label>
-              <select
-                id="task-status-select"
-                name="status"
-                className="form-select"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                {STATUS_OPTIONS.map((st) => (
-                  <option key={st} value={st}>
-                    {st}
-                  </option>
-                ))}
-              </select>
-            </div>
+          <p className="figma-required-note">* Required field</p>
 
-            <div className="form-group">
-              <label htmlFor="task-priority-select" className="form-label">
-                <Layers size={14} className="form-label__icon" aria-hidden="true" />
-                Priority <span className="required-star">*</span>
-              </label>
-              <select
-                id="task-priority-select"
-                name="priority"
-                className="form-select"
-                value={formData.priority}
-                onChange={handleChange}
-              >
-                {PRIORITY_OPTIONS.map((pr) => (
-                  <option key={pr} value={pr}>
-                    {pr} Priority
-                  </option>
-                ))}
-              </select>
-            </div>
-          </div>
-
-          {/* Form Actions Footer */}
-          <div className="modal-footer">
+          {/* Modal Footer Buttons */}
+          <div className="figma-modal-footer">
             <button
               type="button"
-              className="btn btn--secondary"
+              className="figma-btn-cancel"
               onClick={onClose}
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="btn btn--primary"
+              className="figma-btn-submit"
             >
-              {isEditing ? 'Save Changes' : 'Create Task'}
+              {isEditing ? 'Save changes' : 'Create task'}
             </button>
           </div>
         </form>

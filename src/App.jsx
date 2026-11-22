@@ -1,36 +1,34 @@
 import React, { useState, useMemo } from 'react';
 import {
-  CheckSquare,
+  ListTodo,
   Clock,
-  CheckCircle2,
-  TrendingUp,
-  Plus
+  Check,
+  LayoutGrid,
+  Calendar,
+  Settings
 } from 'lucide-react';
 import { initialTasks } from './data/sampleTasks';
 import { useLocalStorage } from './hooks/useLocalStorage';
 import { Sidebar } from './components/Sidebar';
 import { Header } from './components/Header';
-import { StatCard } from './components/StatCard';
 import { FocusNotes } from './components/FocusNotes';
-import { SearchBar } from './components/SearchBar';
+import { StatCard } from './components/StatCard';
 import { FilterTabs } from './components/FilterTabs';
 import { TaskList } from './components/TaskList';
 import { TaskForm } from './components/TaskForm';
 import { DeleteModal } from './components/DeleteModal';
 
 export function App() {
-  // Tasks stored and synced with localStorage
-  const [tasks, setTasks] = useLocalStorage('focusboard_tasks', initialTasks);
+  // Task storage using custom localStorage hook with 12 Figma seed tasks
+  const [tasks, setTasks] = useLocalStorage('focusboard_tasks_v2', initialTasks);
 
   // Search & Filter state
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [priorityFilter, setPriorityFilter] = useState('All');
-  const [categoryFilter, setCategoryFilter] = useState('All');
 
-  // UI display state
-  const [viewMode, setViewMode] = useState('grid'); // 'grid' | 'list'
-  const [activeNav, setActiveNav] = useState('dashboard');
+  // Navigation & Drawer state
+  const [activeNav, setActiveNav] = useState('overview');
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState(false);
 
   // Modal dialog states
@@ -38,7 +36,7 @@ export function App() {
   const [editingTask, setEditingTask] = useState(null);
   const [deletingTask, setDeletingTask] = useState(null);
 
-  // 1. Dynamic Task Statistics Calculations
+  // Dynamic Statistics
   const totalTasks = tasks.length;
   const inProgressCount = useMemo(
     () => tasks.filter((t) => t.status === 'In progress').length,
@@ -48,44 +46,29 @@ export function App() {
     () => tasks.filter((t) => t.status === 'Completed').length,
     [tasks]
   );
-  const todoCount = useMemo(
-    () => tasks.filter((t) => t.status === 'To do').length,
-    [tasks]
-  );
-  const completionPercentage = useMemo(
-    () => (totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0),
-    [totalTasks, completedCount]
-  );
 
-  // 2. Filtered Tasks (Search + Status + Priority + Category)
+  // Filtered tasks computation
   const filteredTasks = useMemo(() => {
     return tasks.filter((task) => {
-      // Case-insensitive title search
+      const query = searchQuery.trim().toLowerCase();
       const matchesSearch =
-        !searchQuery.trim() ||
-        task.title.toLowerCase().includes(searchQuery.trim().toLowerCase()) ||
-        (task.description && task.description.toLowerCase().includes(searchQuery.trim().toLowerCase()));
+        !query ||
+        task.title.toLowerCase().includes(query) ||
+        (task.description && task.description.toLowerCase().includes(query));
 
-      // Status Filter
       const matchesStatus = statusFilter === 'All' || task.status === statusFilter;
-
-      // Priority Filter
       const matchesPriority = priorityFilter === 'All' || task.priority === priorityFilter;
 
-      // Category Filter
-      const matchesCategory = categoryFilter === 'All' || task.category === categoryFilter;
-
-      return matchesSearch && matchesStatus && matchesPriority && matchesCategory;
+      return matchesSearch && matchesStatus && matchesPriority;
     });
-  }, [tasks, searchQuery, statusFilter, priorityFilter, categoryFilter]);
+  }, [tasks, searchQuery, statusFilter, priorityFilter]);
 
   const hasActiveFilters =
     searchQuery.trim() !== '' ||
     statusFilter !== 'All' ||
-    priorityFilter !== 'All' ||
-    categoryFilter !== 'All';
+    priorityFilter !== 'All';
 
-  // 3. Handlers for CRUD Operations
+  // CRUD Handlers
   const handleOpenCreateModal = () => {
     setEditingTask(null);
     setIsTaskFormOpen(true);
@@ -96,45 +79,28 @@ export function App() {
     setIsTaskFormOpen(true);
   };
 
-  const handleCloseTaskForm = () => {
-    setIsTaskFormOpen(false);
-    setEditingTask(null);
-  };
-
   const handleSaveTask = (taskData) => {
     if (editingTask) {
-      // Update existing task, preserve original ID
-      setTasks((prevTasks) =>
-        prevTasks.map((task) =>
-          task.id === editingTask.id ? { ...task, ...taskData, id: task.id } : task
-        )
+      setTasks((prev) =>
+        prev.map((t) => (t.id === editingTask.id ? { ...t, ...taskData, id: t.id } : t))
       );
     } else {
-      // Create new task with unique ID
       const newTask = {
         ...taskData,
         id: `task-${Date.now()}`
       };
-      setTasks((prevTasks) => [newTask, ...prevTasks]);
+      setTasks((prev) => [newTask, ...prev]);
     }
   };
 
-  const handleOpenDeleteModal = (task) => {
-    setDeletingTask(task);
-  };
-
-  const handleCloseDeleteModal = () => {
-    setDeletingTask(null);
-  };
-
   const handleConfirmDelete = (taskId) => {
-    setTasks((prevTasks) => prevTasks.filter((t) => t.id !== taskId));
+    setTasks((prev) => prev.filter((t) => t.id !== taskId));
     setDeletingTask(null);
   };
 
   const handleStatusChange = (taskId, newStatus) => {
-    setTasks((prevTasks) =>
-      prevTasks.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
+    setTasks((prev) =>
+      prev.map((t) => (t.id === taskId ? { ...t, status: newStatus } : t))
     );
   };
 
@@ -142,11 +108,10 @@ export function App() {
     setSearchQuery('');
     setStatusFilter('All');
     setPriorityFilter('All');
-    setCategoryFilter('All');
   };
 
   return (
-    <div className="app-layout">
+    <div className="figma-layout">
       {/* Sidebar Navigation */}
       <Sidebar
         isOpen={isMobileSidebarOpen}
@@ -155,124 +120,150 @@ export function App() {
         onNavChange={setActiveNav}
       />
 
-      {/* Main Content Area */}
-      <div className="main-wrapper">
-        <Header
-          onMenuClick={() => setIsMobileSidebarOpen(true)}
-          onAddTaskClick={handleOpenCreateModal}
-          completedCount={completedCount}
-          totalCount={totalTasks}
-        />
+      {/* Main Container */}
+      <div className="figma-main">
+        {/* Top Header */}
+        <Header onMenuClick={() => setIsMobileSidebarOpen(true)} />
 
-        <main id="main-content" className="dashboard-content" role="main">
-          {/* Section 1: Overview Statistics Cards */}
-          <section className="stats-section" aria-label="Task Statistics Overview">
-            <div className="stats-grid">
+        <main className="figma-content" role="main">
+          {/* Main Title Row matching Figma */}
+          <section className="dashboard-hero" aria-label="Page Title">
+            <div className="dashboard-hero__text">
+              <h1 className="dashboard-hero__title">Your work, in focus.</h1>
+              <p className="dashboard-hero__subtitle desktop-only">
+                Plan your day, stay organized, and celebrate small wins.
+              </p>
+              <p className="dashboard-hero__subtitle mobile-only">
+                Stay organized and keep moving forward.
+              </p>
+            </div>
+
+            <button
+              type="button"
+              className="btn-new-task-cta desktop-only"
+              onClick={handleOpenCreateModal}
+              aria-label="Create new task"
+            >
+              New task
+            </button>
+          </section>
+
+          {/* Section 1: Focus Notes Carousel */}
+          <FocusNotes />
+
+          {/* Section 2: Overview Statistics */}
+          <section className="overview-stats-section" aria-label="Overview statistics">
+            <h2 className="mobile-section-label">Overview</h2>
+            <div className="overview-stats-grid">
               <StatCard
-                title="Total Tasks"
+                title="Total tasks"
                 value={totalTasks}
-                subtitle={`${todoCount} pending to be tackled`}
-                icon={CheckSquare}
-                badge={`${totalTasks} items`}
-                colorTheme="indigo"
+                subtitle="Across all projects"
+                icon={ListTodo}
+                theme="purple"
               />
               <StatCard
-                title="In Progress"
+                title="In progress"
                 value={inProgressCount}
-                subtitle="Active deep work tasks"
+                subtitle="Keep the momentum"
                 icon={Clock}
-                badge={`${totalTasks > 0 ? Math.round((inProgressCount / totalTasks) * 100) : 0}% active`}
-                colorTheme="amber"
+                theme="cyan"
               />
               <StatCard
                 title="Completed"
                 value={completedCount}
-                subtitle="Tasks successfully resolved"
-                icon={CheckCircle2}
-                badge={`${completedCount} closed`}
-                colorTheme="emerald"
-              />
-              <StatCard
-                title="Completion Rate"
-                value={`${completionPercentage}%`}
-                subtitle={`${completedCount} of ${totalTasks} completed`}
-                icon={TrendingUp}
-                badge={completionPercentage >= 50 ? 'On Track' : 'Needs Focus'}
-                colorTheme="purple"
-                progress={completionPercentage}
+                subtitle="Great work this week"
+                icon={Check}
+                theme="green"
               />
             </div>
           </section>
 
-          {/* Section 2: Focus Notes Carousel */}
-          <FocusNotes />
+          {/* Section 3: My Tasks Section with Toolbar */}
+          <FilterTabs
+            statusFilter={statusFilter}
+            onStatusChange={setStatusFilter}
+            priorityFilter={priorityFilter}
+            onPriorityChange={setPriorityFilter}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onViewAllClick={handleResetFilters}
+            onAddTaskClick={handleOpenCreateModal}
+            counts={{
+              total: totalTasks,
+              inProgress: inProgressCount,
+              completed: completedCount
+            }}
+            hasActiveFilters={hasActiveFilters}
+            onResetFilters={handleResetFilters}
+          />
 
-          {/* Section 3: Task Filters and Search Toolbar */}
-          <section className="task-filter-section" aria-label="Search and Filter Tasks">
-            <div className="task-filter-bar">
-              <SearchBar
-                value={searchQuery}
-                onChange={setSearchQuery}
-                onClear={() => setSearchQuery('')}
-              />
-              <button
-                type="button"
-                className="btn btn--primary btn--mobile-add"
-                onClick={handleOpenCreateModal}
-                aria-label="Add new task"
-              >
-                <Plus size={16} aria-hidden="true" />
-                <span>New Task</span>
-              </button>
-            </div>
-
-            <FilterTabs
-              statusFilter={statusFilter}
-              onStatusChange={setStatusFilter}
-              priorityFilter={priorityFilter}
-              onPriorityChange={setPriorityFilter}
-              categoryFilter={categoryFilter}
-              onCategoryChange={setCategoryFilter}
-              onResetFilters={handleResetFilters}
-              hasActiveFilters={hasActiveFilters}
-              counts={{
-                total: totalTasks,
-                todo: todoCount,
-                inProgress: inProgressCount,
-                completed: completedCount
-              }}
-            />
-          </section>
-
-          {/* Section 4: Dynamic Task List with Grid/List Toggle */}
+          {/* Section 4: Task List Rows */}
           <TaskList
             tasks={filteredTasks}
             totalTasksCount={totalTasks}
             onEdit={handleOpenEditModal}
-            onDelete={handleOpenDeleteModal}
+            onDelete={setDeletingTask}
             onStatusChange={handleStatusChange}
             onCreateClick={handleOpenCreateModal}
             onResetFilters={handleResetFilters}
-            viewMode={viewMode}
-            onViewModeChange={setViewMode}
           />
         </main>
+
+        {/* Mobile Bottom Navigation Bar (matches 390px Figma frame) */}
+        <nav className="mobile-bottom-nav" aria-label="Mobile Navigation">
+          <button
+            type="button"
+            className={`mobile-bottom-btn ${activeNav === 'overview' ? 'mobile-bottom-btn--active' : ''}`}
+            onClick={() => setActiveNav('overview')}
+          >
+            <LayoutGrid size={18} aria-hidden="true" />
+            <span>Overview</span>
+          </button>
+          <button
+            type="button"
+            className={`mobile-bottom-btn ${activeNav === 'tasks' ? 'mobile-bottom-btn--active' : ''}`}
+            onClick={() => setActiveNav('tasks')}
+          >
+            <ListTodo size={18} aria-hidden="true" />
+            <span>Tasks</span>
+          </button>
+          <button
+            type="button"
+            className={`mobile-bottom-btn ${activeNav === 'calendar' ? 'mobile-bottom-btn--active' : ''}`}
+            onClick={() => setActiveNav('calendar')}
+          >
+            <Calendar size={18} aria-hidden="true" />
+            <span>Calendar</span>
+          </button>
+          <button
+            type="button"
+            className={`mobile-bottom-btn ${activeNav === 'settings' ? 'mobile-bottom-btn--active' : ''}`}
+            onClick={() => setActiveNav('settings')}
+          >
+            <Settings size={18} aria-hidden="true" />
+            <span>Settings</span>
+          </button>
+        </nav>
       </div>
 
-      {/* Modal Dialog: Create / Edit Task */}
+      {/* Task Create / Edit Modal */}
       <TaskForm
         isOpen={isTaskFormOpen}
-        onClose={handleCloseTaskForm}
+        onClose={() => {
+          setIsTaskFormOpen(false);
+          setEditingTask(null);
+        }}
         onSubmit={handleSaveTask}
         initialTask={editingTask}
       />
 
-      {/* Modal Dialog: Delete Confirmation */}
+      {/* Delete Confirmation Modal */}
       <DeleteModal
         isOpen={Boolean(deletingTask)}
         task={deletingTask}
         onConfirm={handleConfirmDelete}
-        onCancel={handleCloseDeleteModal}
+        onCancel={() => setDeletingTask(null)}
       />
     </div>
   );

@@ -1,71 +1,48 @@
 import React from 'react';
-import { Menu, Plus, Bell, CheckCircle } from 'lucide-react';
+import { ChevronDown, Menu } from 'lucide-react';
+import { FocusBoardLogoIcon } from './Sidebar';
 
 /**
- * Top Header component with mobile toggle, date badge, add task button, and user notifications
+ * Top Header matching Figma
+ * Desktop (1440px): Breadcrumb "Workspace / Overview" + User Avatar "JD"
+ * Mobile (390px): Logo + Brand "FocusBoard" + User Avatar "JD"
  */
-export function Header({ onMenuClick, onAddTaskClick, completedCount, totalCount }) {
-  // Today's formatted date
-  const todayFormatted = new Date().toLocaleDateString('en-US', {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric'
-  });
-
+export function Header({ onMenuClick }) {
   return (
     <header className="dashboard-header" role="banner">
       <div className="dashboard-header__left">
-        {/* Mobile Hamburger Menu Toggle */}
+        {/* Mobile Hamburger menu toggle */}
         <button
           type="button"
           className="dashboard-header__menu-btn"
           onClick={onMenuClick}
-          aria-label="Open mobile navigation menu"
+          aria-label="Toggle navigation menu"
         >
-          <Menu size={22} aria-hidden="true" />
+          <Menu size={20} aria-hidden="true" />
         </button>
 
-        <div className="dashboard-header__titles">
-          <div className="dashboard-header__greeting-row">
-            <h1 className="dashboard-header__title">Dashboard</h1>
-            <span className="dashboard-header__date-badge">
-              {todayFormatted}
-            </span>
-          </div>
-          <p className="dashboard-header__subtitle">
-            Welcome back! Here's an overview of your productivity priorities.
-          </p>
+        {/* Mobile Logo Brand */}
+        <div className="dashboard-header__mobile-brand">
+          <FocusBoardLogoIcon />
+          <span className="dashboard-header__mobile-brand-name">FocusBoard</span>
         </div>
+
+        {/* Desktop Breadcrumb */}
+        <nav className="desktop-breadcrumb" aria-label="Breadcrumbs">
+          <span className="breadcrumb__item breadcrumb__item--muted">Workspace</span>
+          <span className="breadcrumb__separator">/</span>
+          <span className="breadcrumb__item breadcrumb__item--active">Overview</span>
+        </nav>
       </div>
 
       <div className="dashboard-header__right">
-        {/* Quick summary pill */}
-        <div className="dashboard-header__status-chip" title="Task progress today">
-          <CheckCircle size={15} className="text-emerald" aria-hidden="true" />
-          <span>{completedCount} of {totalCount} Done</span>
+        {/* User Avatar Circle "JD" */}
+        <div className="user-avatar-btn" role="button" tabIndex={0} aria-label="User profile JD">
+          <div className="avatar-circle">
+            <span>JD</span>
+          </div>
+          <ChevronDown size={14} className="avatar-chevron" aria-hidden="true" />
         </div>
-
-        {/* Notifications Icon */}
-        <button
-          type="button"
-          className="dashboard-header__icon-btn"
-          aria-label="View notifications (1 unread)"
-          title="Notifications"
-        >
-          <Bell size={18} aria-hidden="true" />
-          <span className="notification-dot" aria-hidden="true" />
-        </button>
-
-        {/* Primary CTA: Add Task */}
-        <button
-          type="button"
-          className="btn btn--primary header-add-btn"
-          onClick={onAddTaskClick}
-          aria-label="Create new task"
-        >
-          <Plus size={18} aria-hidden="true" />
-          <span>Add Task</span>
-        </button>
       </div>
     </header>
   );

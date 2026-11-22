@@ -2,17 +2,14 @@ import React, { useEffect, useRef } from 'react';
 import { AlertCircle, Trash2, X } from 'lucide-react';
 
 /**
- * DeleteModal confirmation dialog before permanent task deletion
+ * Delete Confirmation Modal
  */
 export function DeleteModal({ isOpen, task, onConfirm, onCancel }) {
   const confirmBtnRef = useRef(null);
 
-  // Esc key and focus management
   useEffect(() => {
     const handleKeyDown = (e) => {
-      if (e.key === 'Escape' && isOpen) {
-        onCancel();
-      }
+      if (e.key === 'Escape' && isOpen) onCancel();
     };
     if (isOpen) {
       window.addEventListener('keydown', handleKeyDown);
@@ -24,43 +21,41 @@ export function DeleteModal({ isOpen, task, onConfirm, onCancel }) {
   if (!isOpen || !task) return null;
 
   return (
-    <div className="modal-backdrop" onClick={onCancel} role="presentation">
+    <div className="figma-modal-backdrop" onClick={onCancel} role="presentation">
       <div
-        className="modal-container delete-modal"
+        className="figma-modal-card delete-card"
         onClick={(e) => e.stopPropagation()}
         role="dialog"
         aria-modal="true"
-        aria-labelledby="delete-modal-title"
-        aria-describedby="delete-modal-desc"
+        aria-labelledby="delete-dialog-title"
       >
-        <div className="delete-modal__header">
-          <div className="delete-modal__icon-wrap">
-            <AlertCircle size={24} className="delete-modal__icon" aria-hidden="true" />
+        <div className="figma-modal-header">
+          <div className="delete-title-wrap">
+            <div className="delete-warning-icon">
+              <AlertCircle size={20} aria-hidden="true" />
+            </div>
+            <h3 id="delete-dialog-title" className="figma-modal-title">Delete task?</h3>
           </div>
           <button
             type="button"
-            className="modal-close-btn"
+            className="figma-modal-close"
             onClick={onCancel}
-            aria-label="Cancel deletion"
+            aria-label="Close"
           >
             <X size={18} aria-hidden="true" />
           </button>
         </div>
 
-        <div className="delete-modal__body">
-          <h3 id="delete-modal-title" className="delete-modal__title">
-            Delete Task
-          </h3>
-          <p id="delete-modal-desc" className="delete-modal__desc">
-            Are you sure you want to delete <strong className="delete-modal__task-name">"{task.title}"</strong>?
-            This will permanently remove it from your board and local storage.
+        <div className="delete-modal-body">
+          <p className="delete-modal-text">
+            Are you sure you want to remove <strong>"{task.title}"</strong>? This action cannot be undone.
           </p>
         </div>
 
-        <div className="modal-footer delete-modal__footer">
+        <div className="figma-modal-footer">
           <button
             type="button"
-            className="btn btn--secondary"
+            className="figma-btn-cancel"
             onClick={onCancel}
           >
             Cancel
@@ -68,11 +63,11 @@ export function DeleteModal({ isOpen, task, onConfirm, onCancel }) {
           <button
             ref={confirmBtnRef}
             type="button"
-            className="btn btn--danger"
+            className="btn-danger-submit"
             onClick={() => onConfirm(task.id)}
           >
-            <Trash2 size={16} aria-hidden="true" />
-            <span>Delete Task</span>
+            <Trash2 size={14} aria-hidden="true" />
+            <span>Delete task</span>
           </button>
         </div>
       </div>

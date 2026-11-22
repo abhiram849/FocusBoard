@@ -1,130 +1,146 @@
 import React, { useState } from 'react';
-import { ChevronLeft, ChevronRight, Sparkles, Lightbulb, Target, Award } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Check } from 'lucide-react';
 
 /**
- * Mandatory 3-slide Focus Notes Carousel
- * Frame 1: 15:2 - Plan your day
- * Frame 2: 15:30 - Stay in the flow
- * Frame 3: 15:58 - Reflect and celebrate
+ * 3-slide Focus Notes carousel matching Figma Frame 15:2, 15:30, 15:58
  */
 const FOCUS_SLIDES = [
   {
     id: 1,
-    slideNumber: "FOCUS NOTES · 1 OF 3",
-    tag: "Daily Planning",
-    tagIcon: Target,
-    title: "Plan your day",
-    description: "Organise your priorities and focus on what matters most. Break complex projects into manageable daily tasks.",
-    tip: "Pro Tip: Tackle your highest-priority item before noon to set a productive tone for the rest of your workday.",
-    gradientClass: "slide-theme--indigo"
+    tag: "FOCUS NOTES",
+    counter: "01 / 03",
+    title: "Make today count.",
+    subtitle: "A little focus goes a long way.",
+    mobileDesc: "4 tasks waiting for your attention.",
+    card: {
+      statusLabel: "NEXT UP",
+      title: "Design landing page",
+      percent: 62
+    }
   },
   {
     id: 2,
-    slideNumber: "FOCUS NOTES · 2 OF 3",
-    tag: "Deep Focus",
-    tagIcon: Lightbulb,
-    title: "Stay in the flow",
-    description: "Batch similar tasks together and eliminate distractions to maintain peak productivity and deep concentration.",
-    tip: "Pro Tip: Run focused 25-minute Pomodoro sprints for tasks currently marked In Progress.",
-    gradientClass: "slide-theme--amber"
+    tag: "FOCUS NOTES",
+    counter: "02 / 03",
+    title: "Small steps, big progress.",
+    subtitle: "Keep your priorities in view.",
+    mobileDesc: "3 high priority items in progress.",
+    card: {
+      statusLabel: "IN PROGRESS",
+      title: "Fix mobile navigation",
+      percent: 81
+    }
   },
   {
     id: 3,
-    slideNumber: "FOCUS NOTES · 3 OF 3",
-    tag: "Review & Growth",
-    tagIcon: Award,
-    title: "Reflect and celebrate",
-    description: "Review your completed tasks daily to track measurable progress, identify roadblocks, and calibrate upcoming deadlines.",
-    tip: "Pro Tip: Take a 5-minute retrospective at the end of each afternoon to celebrate finished tasks and prep tomorrow's queue.",
-    gradientClass: "slide-theme--emerald"
+    tag: "FOCUS NOTES",
+    counter: "03 / 03",
+    title: "Celebrate the wins.",
+    subtitle: "Every completed task moves you forward.",
+    mobileDesc: "7 tasks completed this week.",
+    card: {
+      statusLabel: "COMPLETED",
+      title: "Review onboarding copy",
+      percent: 100
+    }
   }
 ];
 
 export function FocusNotes() {
   const [currentIndex, setCurrentIndex] = useState(0);
 
-  const totalSlides = FOCUS_SLIDES.length;
-  const currentSlide = FOCUS_SLIDES[currentIndex];
-  const TagIcon = currentSlide.tagIcon;
+  const total = FOCUS_SLIDES.length;
+  const current = FOCUS_SLIDES[currentIndex];
 
-  // Circular navigation
   const handlePrev = () => {
-    setCurrentIndex((prev) => (prev === 0 ? totalSlides - 1 : prev - 1));
+    setCurrentIndex((prev) => (prev === 0 ? total - 1 : prev - 1));
   };
 
   const handleNext = () => {
-    setCurrentIndex((prev) => (prev === totalSlides - 1 ? 0 : prev + 1));
-  };
-
-  const handleSelectSlide = (index) => {
-    setCurrentIndex(index);
+    setCurrentIndex((prev) => (prev === total - 1 ? 0 : prev + 1));
   };
 
   return (
-    <section className="focus-notes-section" aria-label="Focus Notes Carousel">
-      <div className={`focus-notes-carousel ${currentSlide.gradientClass}`}>
-        <div className="focus-notes__decor-circle" aria-hidden="true" />
-        
-        {/* Carousel Header / Controls */}
-        <div className="focus-notes__top-bar">
-          <div className="focus-notes__meta">
-            <span className="focus-notes__tag">
-              <TagIcon size={14} className="focus-notes__tag-icon" aria-hidden="true" />
-              {currentSlide.tag}
-            </span>
-            <span className="focus-notes__slide-count">
-              {currentSlide.slideNumber}
-            </span>
+    <section className="focus-notes-banner" aria-label="Focus Notes">
+      <div className="focus-notes-card">
+        {/* Left text block */}
+        <div className="focus-notes-left">
+          <div className="focus-notes-meta">
+            <span className="focus-notes-tag">{current.tag}</span>
+            <span className="focus-notes-counter">{current.counter}</span>
           </div>
 
-          <div className="focus-notes__controls">
+          <h2 className="focus-notes-title">{current.title}</h2>
+          <p className="focus-notes-subtitle desktop-only">{current.subtitle}</p>
+          <p className="focus-notes-subtitle mobile-only">{current.mobileDesc}</p>
+
+          {/* Indicator Horizontal Bars */}
+          <div className="focus-notes-bars" role="tablist" aria-label="Slide indicators">
+            {FOCUS_SLIDES.map((_, idx) => (
+              <button
+                key={idx}
+                type="button"
+                role="tab"
+                aria-selected={currentIndex === idx}
+                aria-label={`Slide ${idx + 1}`}
+                className={`focus-bar ${currentIndex === idx ? 'focus-bar--active' : ''}`}
+                onClick={() => setCurrentIndex(idx)}
+              />
+            ))}
+          </div>
+
+          {/* Mobile inline progress bar */}
+          <div className="mobile-banner-progress mobile-only">
+            <div className="mobile-banner-progress-fill" style={{ width: `${current.card.percent}%` }} />
+            <span className="mobile-banner-progress-text">{current.card.percent}%</span>
+          </div>
+        </div>
+
+        {/* Right floating tilt-card + nav buttons (Desktop/Tablet) */}
+        <div className="focus-notes-right">
+          <div className="focus-floating-card">
+            <div className="floating-card-header">
+              <div className="floating-check-icon">
+                <Check size={12} strokeWidth={3} aria-hidden="true" />
+              </div>
+              <div className="floating-card-info">
+                <span className="floating-card-tag">{current.card.statusLabel}</span>
+                <span className="floating-card-title">{current.card.title}</span>
+              </div>
+            </div>
+
+            <div className="floating-progress-container">
+              <div className="floating-progress-bar">
+                <div
+                  className="floating-progress-fill"
+                  style={{ width: `${current.card.percent}%` }}
+                />
+              </div>
+              <span className="floating-percent">{current.card.percent}%</span>
+            </div>
+          </div>
+
+          {/* Navigation Arrows */}
+          <div className="focus-nav-buttons">
             <button
               type="button"
-              className="focus-notes__btn focus-notes__btn--prev"
+              className="focus-arrow-btn focus-arrow-btn--prev"
               onClick={handlePrev}
               aria-label="Previous slide"
               title="Previous slide"
             >
-              <ChevronLeft size={18} aria-hidden="true" />
+              <ChevronLeft size={16} aria-hidden="true" />
             </button>
             <button
               type="button"
-              className="focus-notes__btn focus-notes__btn--next"
+              className="focus-arrow-btn focus-arrow-btn--next"
               onClick={handleNext}
               aria-label="Next slide"
               title="Next slide"
             >
-              <ChevronRight size={18} aria-hidden="true" />
+              <ChevronRight size={16} aria-hidden="true" />
             </button>
           </div>
-        </div>
-
-        {/* Active Slide Body */}
-        <div className="focus-notes__content">
-          <div className="focus-notes__text-group">
-            <h3 className="focus-notes__title">{currentSlide.title}</h3>
-            <p className="focus-notes__desc">{currentSlide.description}</p>
-          </div>
-
-          <div className="focus-notes__tip-box">
-            <Sparkles size={16} className="focus-notes__tip-icon" aria-hidden="true" />
-            <span className="focus-notes__tip-text">{currentSlide.tip}</span>
-          </div>
-        </div>
-
-        {/* Navigation Indicators */}
-        <div className="focus-notes__indicators" role="tablist" aria-label="Slide Indicators">
-          {FOCUS_SLIDES.map((slide, index) => (
-            <button
-              key={slide.id}
-              type="button"
-              role="tab"
-              aria-selected={currentIndex === index}
-              aria-label={`Go to slide ${index + 1}: ${slide.title}`}
-              className={`focus-notes__dot ${currentIndex === index ? 'focus-notes__dot--active' : ''}`}
-              onClick={() => handleSelectSlide(index)}
-            />
-          ))}
         </div>
       </div>
     </section>
