@@ -549,7 +549,7 @@ button {
 
 .overview-stats-grid {
   display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  grid-template-columns: repeat(4, 1fr);
   gap: 20px;
 }
 
@@ -597,6 +597,45 @@ button {
 .stat-card__icon-box--green {
   background-color: #ecfdf5;
   color: #059669;
+}
+
+.stat-card__icon-box--indigo {
+  background-color: #eef2ff;
+  color: #4f46e5;
+}
+
+.stat-card__progress-container {
+  margin: 8px 0 6px;
+}
+
+.stat-card__progress-bar {
+  width: 100%;
+  height: 5px;
+  background-color: #f3f4f6;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.stat-card__progress-fill {
+  height: 100%;
+  border-radius: 9999px;
+  transition: width 0.3s ease;
+}
+
+.stat-card__progress-fill--purple {
+  background-color: var(--primary-purple);
+}
+
+.stat-card__progress-fill--cyan {
+  background-color: #0284c7;
+}
+
+.stat-card__progress-fill--green {
+  background-color: #059669;
+}
+
+.stat-card__progress-fill--indigo {
+  background-color: #4f46e5;
 }
 
 .stat-card__title {
@@ -1563,14 +1602,10 @@ button {
     display: block;
   }
 
-  /* 2 stat cards on mobile matching Figma: Total tasks and Completed */
+  /* Stat cards on mobile: clean 2x2 grid */
   .overview-stats-grid {
     grid-template-columns: 1fr 1fr;
     gap: 12px;
-  }
-
-  .overview-stats-grid .stat-card:nth-child(2) {
-    display: none; /* Hide 'In progress' on mobile to match the 2-column Figma mobile frame */
   }
 
   .stat-card {

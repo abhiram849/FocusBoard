@@ -3,6 +3,7 @@ import {
   ListTodo,
   Clock,
   Check,
+  TrendingUp,
   LayoutGrid,
   Calendar,
   Settings
@@ -36,7 +37,7 @@ export function App() {
   const [editingTask, setEditingTask] = useState(null);
   const [deletingTask, setDeletingTask] = useState(null);
 
-  // Dynamic Statistics
+  // Dynamic Statistics (Step 6: Total, In progress, Completed, and Completion %)
   const totalTasks = tasks.length;
   const inProgressCount = useMemo(
     () => tasks.filter((t) => t.status === 'In progress').length,
@@ -46,6 +47,9 @@ export function App() {
     () => tasks.filter((t) => t.status === 'Completed').length,
     [tasks]
   );
+  const completionPercentage = useMemo(() => {
+    return totalTasks > 0 ? Math.round((completedCount / totalTasks) * 100) : 0;
+  }, [totalTasks, completedCount]);
 
   // Filtered tasks computation
   const filteredTasks = useMemo(() => {
@@ -175,6 +179,14 @@ export function App() {
                 subtitle="Great work this week"
                 icon={Check}
                 theme="green"
+              />
+              <StatCard
+                title="Completion rate"
+                value={`${completionPercentage}%`}
+                subtitle={`${completedCount} of ${totalTasks} completed`}
+                icon={TrendingUp}
+                theme="indigo"
+                progress={completionPercentage}
               />
             </div>
           </section>
