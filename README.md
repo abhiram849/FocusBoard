@@ -41,8 +41,8 @@ FocusBoard is a responsive, accessible single-page task management dashboard bui
    - **Reset Filters:** One-click reset button appears whenever active filters are applied.
 
 5. **Local Data Persistence**
-   - Custom `useLocalStorage` hook preserves tasks across browser refreshes and session closures under the `focusboard_tasks` key.
-   - First-time visitors are bootstrapped with 7 realistic sample tasks; subsequent updates or deletions never get overwritten by sample data on refresh.
+   - Custom `useLocalStorage` hook preserves tasks across browser refreshes and session closures under the `focusboard_tasks_v2` key.
+   - First-time visitors are bootstrapped with 12 realistic sample tasks (5 In progress, 7 Completed, matching the Figma dashboard numbers exactly); subsequent updates or deletions never get overwritten by sample data on refresh.
 
 6. **Accessibility & Usability (WCAG 2.1 AA Compliant)**
    - Semantic HTML5 structure (`<aside>`, `<header>`, `<main>`, `<section>`, `<article>`, `<nav>`).
