@@ -6,7 +6,7 @@ FocusBoard is a responsive, accessible single-page task management dashboard bui
 
 ## 🚀 Live Demo & Repository
 
-- **Live Deployment:** [FocusBoard on Vercel](https://focusboard-app.vercel.app) *(or your deployed URL)*
+- **Live Deployment:** [FocusBoard on Vercel](https://focusboard-vert-chi.vercel.app/)
 - **GitHub Repository:** ([https://github.com/abhiram849/FocusBoard])
 
 ---
